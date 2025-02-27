@@ -98,14 +98,52 @@
             </div>
         </div>
         <div class="combo" v-if="currentMode=='Combos'">
-            {{ combos.currentQuestion }}
+            <div class="card">
+                <div class="card-title">
+                    <span v-if="correctCombo() && combo.reveal">
+                        Correct
+                    </span>
+                    <span v-if="!correctCombo() && combo.reveal">
+                        Incorrect
+                    </span>
+                </div>
+                <div class="card-options">
+                    <div
+                        v-for="(c, i) in combo.combos" 
+                        class="card-option"
+                        :key="i">
+                        <span 
+                            :class="['select-option',combo.selected[i]?'selected':'']"
+                            @click="combo.selected[i]=combo.selected[i]?0:1"
+                            v-if="!combo.reveal"
+                            >
+                        </span>
+                        <span 
+                            :class="['select-option',combo.selected[i]?'selected':'',combo.correct[i]?'correct':'incorrect']"
+                            v-else
+                            >
+                        </span>
+                        <span>
+                            {{ c }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="next-question" @click="combo.reveal = true" v-if="!combo.reveal">
+                        <svg-icon type="mdi" :path="mdi.mdiCheck " :size="24"></svg-icon>
+                    </button>
+                    <button class="next-question" @click="generateCombos(3)" v-else>
+                        <svg-icon type="mdi" :path="mdi.mdiSkipNext " :size="24"></svg-icon>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiOrbitVariant, mdiSkipNext, mdiMenu, mdiCheckAll, mdiRestore } from '@mdi/js';
+import { mdiOrbitVariant, mdiSkipNext, mdiMenu, mdiCheckAll, mdiRestore, mdiCheck } from '@mdi/js';
 
 export default {
     name: 'kTest',
@@ -125,6 +163,7 @@ export default {
                 mdiMenu : mdiMenu,
                 mdiCheckAll : mdiCheckAll,
                 mdiRestore : mdiRestore,
+                mdiCheck : mdiCheck,
             },
             modes: ["Anki", "Options", "Combos"],
             currentMode: null,
@@ -139,14 +178,24 @@ export default {
                 points: 0,
                 i: 0,
             },
-            combos: {
-                currentQuestion: null,
+            combo: {
                 combos: [],
-                correct: 0,
+                correct: [],
+                selected: [],
+                reveal: false,
             }
         }
     },
     methods: {
+        correctCombo() {
+            let i = 0
+            let equal = true
+            while(equal && i<this.combo.correct.length) {
+                equal = this.combo.correct[i]==this.combo.selected[i]
+                i++
+            }
+            return equal
+        },
         shuffle(arr) {
             for(let i=arr.length-1; i>=0; i--) {
                 let j = Math.floor(Math.random()*(i+1))
@@ -271,34 +320,84 @@ export default {
                 this.options.questions.push(question)
             }
         },
-        scrambleProposition(proposition) {
-            let operations = [
-                Math.floor(Math.random()*2),
-                Math.floor(Math.random()*2),
-                Math.floor(Math.random()*2),
-                Math.floor(Math.random()*2)
-            ]
-            let scrambled = proposition
-            let isTrue = true
-            if(operations[0]) {
-                let node = scrambled.obj
-                while(node.id==scrambled.sub.parent) {
-                    node = this.randomNode()
-                }
-                scrambled.obj = node
-                isTrue = false
+        generateProposition(vertex) {
+            let proposition = {
+                value : true,
+                negated : false,
+                obj : vertex.obj.id,
+                sub : vertex.sub.id,
+                rel : vertex.id,
             }
-            if(operations[1]) {
-                let node = scrambled.sub
-                while(scrambled.obj.vertices.includes(node.id)) {
-                    node = this.randomNode()
-                }
-                scrambled.sub = node
-                isTrue = false
+
+            let change = Math.floor(Math.random()*3)
+            let neg = Math.floor(Math.random()*2)
+            if(change==0) {
+                proposition.obj = this.randomNode().id
+                proposition.value = false
             }
-            return isTrue
+            else if(change==1){
+                proposition.sub = this.randomNode().id
+                proposition.value = false
+            }
+            else if(change==2){
+                let temp = proposition.sub
+                proposition.sub = proposition.obj
+                proposition.obj = temp
+                proposition.value = false
+            }
+
+            if(neg==0) {
+                proposition.negated = true
+                proposition.value = !proposition.value
+            }
+
+            return proposition
+        },
+        parseProposition(proposition) {
+            let i = Math.floor(Math.random()*2)
+            let parsed = ""
+            if(i){
+                proposition.value?'es cierto que':'es falso que'
+                parsed += proposition.obj+' '+proposition.rel+' '+proposition.sub
+            }
+            else {
+                parsed = proposition.obj+' '+(proposition.negated?'no ':'')+proposition.rel+' '+proposition.sub
+            }
+
+            return parsed
+        },
+        parseSequence(sequence) {
+            let firstVertex = this.getVertexByID(sequence.vertices[0])
+            let firstProposition = this.generateProposition(firstVertex)
+            let value = firstProposition.value
+            let parsed = this.parseProposition(firstProposition)
+
+            for(let i=1; i<sequence.vertices.length; i++) {
+                let i = Math.floor(Math.random()*2)
+                let vertex = this.getVertexByID(sequence.vertices[0])
+                let proposition = this.generateProposition(vertex)
+                if(i) {
+                    parsed += ' y '+this.parseProposition(proposition)
+                    value = value && proposition.value
+                }
+                else {
+                    parsed += ' o '+this.parseProposition(proposition)
+                    value = proposition.value || value
+                }
+            }
+            return {
+                value: value,
+                parsed: parsed
+            }
         },
         generateCombos(grade) {
+            this.combo = {
+                combos: [],
+                correct: [],
+                selected: [],
+                reveal: false,
+            }
+
             if(this.vertices.length<grade) return
 
             let propositions = []
@@ -309,7 +408,33 @@ export default {
                 }
             }
             
-            this.scrambleProposition()
+            this.combo.correct = new Array(grade+2).fill(0)
+            this.combo.selected = new Array(grade+2).fill(0)
+            let correctas = 0
+            let incorrectas = 0
+
+            for(let i=0; i<grade; i++) {
+                let newCombo = this.parseSequence(this.sequence)
+                this.combo.combos.push(newCombo.parsed)
+                this.combo.correct[i] += newCombo.value
+                if(newCombo.value) {
+                    correctas += 1
+                }
+                else {
+                    incorrectas += 1
+                }
+            }
+
+            if(correctas==0||incorrectas==0) {
+                this.combo.correct = new Array(grade+2).fill(0)
+            }
+
+            this.combo.combos.push('Todas son correctas')
+            this.combo.correct[grade] += incorrectas==0
+            this.combo.combos.push('Todas son incorrectas')
+            this.combo.correct[grade+1] += correctas==0
+
+            console.log(JSON.stringify(this.combo.correct))
         },
     },
     watch: {
@@ -321,7 +446,7 @@ export default {
                 this.generateOptions()
             }
             else if(this.currentMode=='Combos') {
-                this.generateCombos(2)
+                this.generateCombos(3)
             }
         },
         sequence() {
@@ -358,7 +483,7 @@ export default {
     z-index: 5;
  }
 
- .anki, .options {
+ .anki, .options, .combo {
     height: 100%; 
     width: 100%;
     position: relative;
@@ -396,7 +521,7 @@ export default {
     bottom: 10px;
  }
 
- .options .card {
+ .options .card, .combo .card {
     aspect-ratio: 9/12;
     height: 80%;
     display: block;
@@ -441,6 +566,20 @@ export default {
     border: 2px solid var(--background);
     background: var(--primary);
  }
+ .correct {
+    outline: 1px solid var(--success);
+    border: 2px solid var(--background);
+    background: var(--success);
+ }
+ .incorrect {
+    outline: 1px solid var(--secondary);
+    border: 2px solid var(--background);
+    background: var(--secondary);
+ }
+ .selected.incorrect, .selected.correct {
+    background: var(--primary);
+ }
+
  .card-actions {
     height: 50px;
     width: 100%;
