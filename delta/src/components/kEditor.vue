@@ -1,7 +1,6 @@
 <template>
   <div id="editor">
     <textarea id="editor-text" autofocus v-model="content" @keydown.enter="updateContent()">
-
     </textarea>
     <button id="update-btn" @click="updateContent()">
       Update
@@ -17,7 +16,13 @@ export default {
   },
   data() {
     return {
-      content: "",
+      content: `A es B, C, D.
+B es B1, B2.
+C es C1, C2.
+D es D1, D2.
+D1 es D1.1, D1.2, D.1.3.
+D2 es D2.2.
+K es X.`,
     }
   },
   methods: {
@@ -63,6 +68,7 @@ export default {
     }
   },
   mounted() {
+    this.updateContent()
   }
 }
 </script>

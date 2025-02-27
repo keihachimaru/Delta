@@ -205,8 +205,10 @@
         <div class="graph-data-stats" v-if="focusedNode.text">
           <span><strong>ID</strong> : {{ focusedNode.id }}</span>
           <span><strong>Parent</strong> : {{ focusedNode.parent }}</span>
+          <span><strong>Ancestors</strong> : {{ focusedNode.ancestors.length }}</span>
+          <span><strong>Descenders</strong> : {{ focusedNode.descenders.length }}</span>
           <span><strong>Vertex [{{ focusedNode.vertices.length }}]</strong> : {{ focusedNode.vertices.join(', ') }}</span>
-          <span><strong>Data</strong> : {{ focusedNode.text }}</span>
+          <span><strong>boundingH</strong> : {{ focusedNode.boundingH }}</span>
         </div>
         <div class="graph-data-stats" v-else>
           {{ focusedNode[2] }}
@@ -220,7 +222,7 @@
 
 <script>
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiPlus, mdiPlay, mdiTriangle, mdiImageArea, mdiTextAccount, mdiSkipNext  } from '@mdi/js';
+import { mdiTable, mdiPlus, mdiHelp, mdiPlay, mdiTriangle, mdiImageArea, mdiTextAccount, mdiSkipNext  } from '@mdi/js';
 
 class Node {
   constructor(x, y, id) {
@@ -231,6 +233,10 @@ class Node {
     this.visible = false
     this.text = id
     this.parent = null
+    this.ancestors = []
+    this.descenders = []
+    
+    this.boundingH = 0
   }
 }
 
@@ -253,7 +259,9 @@ export default {
         mdiTriangle : mdiTriangle,
         mdiImageArea : mdiImageArea,
         mdiTextAccount : mdiTextAccount,
-        mdiSkipNext : mdiSkipNext 
+        mdiSkipNext : mdiSkipNext,
+        mdiHelp: mdiHelp,
+        mdiTable: mdiTable,
       },
       focusedNode: null,
       nodes : {},
@@ -261,7 +269,7 @@ export default {
       displayVertices: [],
       origin: [0, 0],
       xDist: 100,
-      yDist: 60,
+      yDist: 40,
       scale: 100,
       sequences: [],
       currentsequence: null,
@@ -322,7 +330,6 @@ export default {
         }
       }
       getChilds(this.nodes[this.currentsequence.sequences[this.quiz.i]], this)
-      console.log(options)
       return options
     },
     playSequence() {
@@ -391,36 +398,100 @@ export default {
       }
     },
     generateChilds(node, vertices) {
+      let siblings = []
+
       for(let i=0;i<vertices.length;i++) {
         let childID = vertices[i]
         let childVertices = this.graph.vertices.filter((e)=>Array.from(e).includes(childID)&&!this.vertices.includes(e))
         this.vertices += childVertices
-        let newNode = new Node(node.x+this.xDist, node.y+this.yDist*(i-parseInt(vertices.length/2)), childID)
+        let newNode = new Node(node.x+this.xDist, node.y+this.yDist*i, childID)
         newNode.parent = node.id
+        newNode.ancestors = node.ancestors.concat([node.id])
         newNode.vertices = childVertices.map((e)=>e[0]==childID?e[1]:e[0])
         this.nodes[childID] = newNode
+        siblings.push(newNode)
+
         if (childVertices.length) {
           this.displayVertices = this.displayVertices.concat(childVertices)
           this.generateChilds(newNode, childVertices.map((e)=>e[0]==childID?e[1]:e[0]))
         }
       }
     },
+    calcBoundingH(node, box) {
+      if(box==0) {
+        for(let i=0;i<node.vertices.length;i++) {
+          this.calcBoundingH(this.nodes[node.vertices[i]], 0)
+        }
+        if(node.vertices.length==0) {
+          node.boundingH = 1
+          this.calcBoundingH(this.nodes[node.parent], 1)
+        }
+      }
+      else {
+        node.boundingH += 1
+        if(node.parent) {
+          this.calcBoundingH(this.nodes[node.parent], 1)
+        }
+      }
+    },
+    spaceNodes(node) {
+      let box = node.boundingH * this.yDist
+      let last = 0
+      console.log(box)
+      for(let i=0;i<node.vertices.length;i++) {
+        let target = this.nodes[node.vertices[i]]
+        target.y = node.y+this.yDist*last
+        last += target.boundingH
+        this.spaceNodes(target)
+      }
+    },
     generateGraph() {
       let remaining = this.graph.nodes.filter((n)=>!Object.keys(this.nodes).includes(n))
       let x = 0
+      let origins = []
       while (remaining.length) {
         let nodeID = remaining[0]
         if(nodeID) {
+          origins.push(nodeID)
           let vertices = this.graph.vertices.filter((e)=>Array.from(e).includes(nodeID)&&!this.vertices.includes(e))
           this.displayVertices = this.displayVertices.concat(vertices)
           this.vertices += vertices
-          let newNode = new Node(0, x*(this.yDist*2), nodeID)
+          let newNode = new Node(0, x*(this.yDist), nodeID)
           newNode.vertices = vertices.map((e)=>e[0]==nodeID?e[1]:e[0])
           this.nodes[nodeID] = newNode
           this.generateChilds(newNode, vertices.map((e)=>e[0]==nodeID?e[1]:e[0]))
         }
         x++
         remaining = this.graph.nodes.filter((n)=>!Object.keys(this.nodes).includes(n))
+      }
+
+      // function calcDescenders(node, app, descenders) {
+      //   if (descenders) {
+      //     node.descenders = Array.from(new Set(node.descenders.concat(descenders)))
+      //     if (node.parent) {
+      //       calcDescenders(app.nodes[node.parent], app, node.descenders.concat(node.id))
+      //     }
+      //     else {
+      //       return
+      //     }
+      //   }
+      //   else if (node.vertices.length) {
+      //     for (let i=0; i<node.vertices.length; i++) {
+      //       calcDescenders(app.nodes[node.vertices[i]], app, 0)
+      //     }
+      //   }
+      //   else {
+      //     calcDescenders(app.nodes[node.parent], app, [node.id])
+      //   }
+      // }
+      // calcDescenders(this.nodes[origin], this, 0)
+      let lastBox = 0
+      for(let i=0;i<origins.length; i++) {
+        let origin = origins[i]
+        this.nodes[origin].y += lastBox
+        this.calcBoundingH(this.nodes[origin], 0)
+        this.spaceNodes(this.nodes[origin])
+        lastBox = this.nodes[origin].boundingH*this.yDist
       }
 
       for(let i in this.displayVertices) {
@@ -920,6 +991,7 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 .node:hover {
   border-color: var(--primary);
   cursor: pointer;
+  z-index: 100 !important;
 }
 .node:hover .node-contents{
   opacity: 1;
@@ -942,6 +1014,7 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   border-radius: 0px;
   pointer-events: none;
   transition: all .3s ease-in-out;
+  z-index: 100 !important;
 }
 .node-contents img {
   max-width: 100%;
