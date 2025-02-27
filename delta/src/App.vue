@@ -61,7 +61,7 @@ body, html {
 
   /* Text */
   --text: #202124;
-  --text-alt: #737679;
+  --text-alt: #b6b6b6;
 
   /* Success */
   --success: #0F9D58;

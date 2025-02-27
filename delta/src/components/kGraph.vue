@@ -12,7 +12,7 @@
             background: sequence.id,
             borderColor: currentsequence==sequence?'var(--secondary)':'var(--background-alt)'
           }"
-          @click="currentsequence!=sequence?currentsequence=sequence:currentsequence=null"
+          @click="setCurrentSequence(sequence)"
         >
         </span>
       </div>
@@ -37,60 +37,7 @@
           borderColor: currentsequence?currentsequence.id:'var(--primary)'
         }"
         v-if="play">
-        <div class="card" v-if="calcOptions()">
-          <div 
-            class="card-title"
-            :style="{
-              color: currentsequence.id
-            }"
-            >
-            {{ currentsequence.sequences[quiz.i] }}
-          </div>
-          <div class="card-options">
-            <div 
-              class="card-option" 
-              v-for="(option, i) in calcOptions()" 
-              :key="i"
-              @click="quiz.selectedOption=option==quiz.selectedOption?null:option"
-              >
-              <div 
-                :class="[option==quiz.selectedOption?'selected':'select-option']"
-                >
-              </div>
-              <span>{{ option }}</span>
-            </div>
-          </div>
-          <div class="card-action">
-            <div class="next-btn" @click="nextQuestion()"> 
-              <svg-icon type="mdi" :path="mdi.mdiSkipNext" :size="20"></svg-icon>
-            </div>
-          </div>
-        </div>
-        <div class="card" v-else>
-          <div 
-            class="card-title"
-            :style="{
-              color: currentsequence.id
-            }"
-            >
-            {{ quiz.score }} / {{ currentsequence.sequences.length - 1}}
-          </div>
-          <div class="card-options">
-            <div class="card-option" v-for="(option, i) in quiz.selectedOptions" :key="i">
-              <strong
-                :style="{
-                  color: option==currentsequence.sequences[i+1]?'var(--success)':'var(--secondary)'
-                }"
-              >{{ i }}.</strong>
-              <span>{{ option }}</span>
-            </div>
-          </div>
-          <div class="card-action">
-            <div class="next-btn" @click="endQuiz()"> 
-              <svg-icon type="mdi" :path="mdi.mdiSkipNext" :size="20"></svg-icon>
-            </div>
-          </div>
-        </div>
+        <kTest :nodes="nodes" :vertices="displayVertices" :sequence="currentsequence"/>
       </div>
       <div 
         class="node-container" 
@@ -109,8 +56,7 @@
             color: getNodeLColor(node),
             transform: `translate(${(-0.4*0.5*100)}px, ${(-0.4*0.5*100)}px) scale(${scale}%)`,
           }"
-          @dblclick="addNodeSequence(node)"
-          @click="focusedNode=node"
+          @click.right="focusedNode=node;showData=true"
           >
           <span
             :style="{
@@ -121,7 +67,7 @@
           >
             {{ node.id }}
           </span>
-          <div class="node-contents">
+          <div class="node-contents" v-if="!showData">
             <img id="node-image" :src="node.text" v-if="node.text.startsWith('blob:http')">
             <span 
               style="height: calc(100% - 20px); width: calc(100% - 20px)"
@@ -134,38 +80,41 @@
           <line 
             v-for="(vertex, i) in displayVertices" 
             :key="'line'+i"
-            :x1=vertex[0].x*scale/100+origin[0]
-            :y1=vertex[0].y*scale/100+origin[1]
-            :x2=vertex[1].x*scale/100+origin[0]
-            :y2=vertex[1].y*scale/100+origin[1]
+            :x1=vertex.obj.x*scale/100+origin[0]
+            :y1=vertex.obj.y*scale/100+origin[1]
+            :x2=vertex.sub.x*scale/100+origin[0]
+            :y2=vertex.sub.y*scale/100+origin[1]
             :stroke="getLineColor(vertex)"
             :stroke-width="Math.floor(scale/80)+1"
-            @click="focusedNode=vertex"
+            @click.right="focusedNode=vertex;showData=true"
+            @dblclick="addVertexSequence(vertex)"
             />
           <rect
             v-for="(vertex, i) in displayVertices" 
             :key="'text'+i"
-            :x=(vertex[0].x+vertex[1].x)/2*scale/100+origin[0]-vertex[2].length*3-1
-            :y=(vertex[0].y+vertex[1].y)/2*scale/100+origin[1]-6
+            :x=(vertex.obj.x+vertex.sub.x)/2*scale/100+origin[0]-vertex.id.length*3-1
+            :y=(vertex.obj.y+vertex.sub.y)/2*scale/100+origin[1]-6
             height="12"
-            :width="vertex[2].length*6+3"
-            @click="focusedNode=vertex"
+            :width="vertex.id.length*6+3"
+            @click.right="focusedNode=vertex;showData=true"
+            @dblclick="addVertexSequence(vertex)"
             fill="white"
             >
           </rect>
           <text
             v-for="(vertex, i) in displayVertices" 
             :key="'text'+i"
-            :x=(vertex[0].x+vertex[1].x)/2*scale/100+origin[0]-vertex[2].length*3
-            :y=(vertex[0].y+vertex[1].y)/2*scale/100+origin[1]+4
+            :x=(vertex.obj.x+vertex.sub.x)/2*scale/100+origin[0]-vertex.id.length*3
+            :y=(vertex.obj.y+vertex.sub.y)/2*scale/100+origin[1]+4
             stroke-width="1"
             :fill="getLineColor(vertex)"
-            :text-length="vertex[2].length*6"
-            @click="focusedNode=vertex"
+            :text-length="vertex.id.length*6"
+            @click.right="focusedNode=vertex;showData=true"
+            @dblclick="addVertexSequence(vertex)"
             style="cursor: pointer; user-select: none;"
             :font-size="Math.max(scale/8, 5)"
             >
-            {{ vertex[2] }}
+            {{ vertex.id }}
           </text>
         </svg>
       </div>
@@ -207,11 +156,12 @@
           <span><strong>Parent</strong> : {{ focusedNode.parent }}</span>
           <span><strong>Ancestors</strong> : {{ focusedNode.ancestors.length }}</span>
           <span><strong>Descenders</strong> : {{ focusedNode.descenders.length }}</span>
-          <span><strong>Vertex [{{ focusedNode.vertices.length }}]</strong> : {{ focusedNode.vertices.join(', ') }}</span>
-          <span><strong>boundingH</strong> : {{ focusedNode.boundingH }}</span>
         </div>
         <div class="graph-data-stats" v-else>
-          {{ focusedNode[2] }}
+          <span><strong>ID</strong> : {{ focusedNode.id }}</span>
+          <span><strong>PK</strong> : {{ focusedNode.pk }}</span>
+          <span><strong>Object</strong> : {{ focusedNode.obj.id }}</span>
+          <span><strong>Subject</strong> : {{ focusedNode.sub.id }}</span>
         </div>
       </div>
       <div style="height:20px; width: 10px;" v-else>
@@ -221,6 +171,7 @@
 </template>
 
 <script>
+import kTest from './kTest.vue'
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiTable, mdiPlus, mdiHelp, mdiPlay, mdiTriangle, mdiImageArea, mdiTextAccount, mdiSkipNext  } from '@mdi/js';
 
@@ -239,6 +190,14 @@ class Node {
     this.boundingH = 0
   }
 }
+class Vertex {
+  constructor(node1, node2, id) {
+    this.id = id
+    this.pk = Math.floor(Math.random()*10000)
+    this.obj = node1
+    this.sub = node2
+  }
+}
 
 export default {
   name: 'kGraph',
@@ -249,7 +208,8 @@ export default {
     },
   },
   components: {
-    SvgIcon
+    SvgIcon,
+    kTest
   },
   data() {
     return {
@@ -276,62 +236,10 @@ export default {
       drag: false,
       mode: 'text',
       play: false,
-      showData: true,
-      quiz: {
-        i: 0,
-        selectedOption: null,
-        selectedOptions: [],
-        score: 0,
-      }
+      showData: false,
     }
   },
   methods: {
-    endQuiz() {
-      this.quiz = {
-        i: 0,
-        selectedOption: null,
-        selectedOptions: [],
-        score: 0,
-      }
-      this.play = false
-      this.currentsequence = null
-      this.$nextTick(()=>{
-        this.setupNodeContainer()
-      })
-    },
-    nextQuestion() {
-      this.quiz.i++
-      this.quiz.selectedOptions.push(this.quiz.selectedOption)
-      
-      let correctAnswer = this.currentsequence.sequences[this.quiz.i]
-      if (correctAnswer==this.quiz.selectedOption) {
-        this.quiz.score += 1
-      }
-      else {
-        this.quiz.score -= 0
-      }
-      this.quiz.selectedOption = null
-    },
-    calcOptions() {
-      if (this.currentsequence.sequences.length==(this.quiz.i+1)) {
-        return false
-      }
-      let options = []
-      let level = 0
-      function getChilds(node, app) {
-        if (level==1) {
-          options.push(node.id)
-        }
-        else if (node.vertices.length) {
-          level ++;
-          for (let i=0; i<node.vertices.length; i++) {
-            getChilds(app.nodes[node.vertices[i]], app)
-          }
-        }
-      }
-      getChilds(this.nodes[this.currentsequence.sequences[this.quiz.i]], this)
-      return options
-    },
     playSequence() {
       this.play = !this.play
       if (!this.play) {
@@ -340,13 +248,7 @@ export default {
         })
       }
       else {
-        this.quiz = {
-          i: 0,
-          selectedOption: null,
-          selectedOptions: [],
-          score: 0,
-        }
-
+        this.showData = false
       }
     },
     updateNodeImage(target) {
@@ -354,9 +256,26 @@ export default {
         this.focusedNode.text = URL.createObjectURL(target.files[0])
       }
     },
-    addNodeSequence(node) {
+    addVertexSequence(vertex) {
       if(this.currentsequence) {
-        this.currentsequence.sequences.push(node.id)
+        if(!this.currentsequence.vertices.includes(vertex.pk)) {
+          this.currentsequence.vertices.push(vertex.pk)
+        }
+        if(!this.currentsequence.nodes.includes(vertex.obj.id)) {
+          this.currentsequence.nodes.push(vertex.obj.id)
+        }
+        if(!this.currentsequence.nodes.includes(vertex.sub.id)) {
+          this.currentsequence.nodes.push(vertex.sub.id)
+        }
+      }
+    },
+    setCurrentSequence(sequence) {
+      if (sequence==this.currentsequence) {
+        this.playSequence()
+        this.currentsequence = null
+      }
+      else {
+        this.currentsequence = sequence
       }
     },
     createSequence() {
@@ -365,13 +284,16 @@ export default {
       let b = Math.floor(Math.random()*255).toString(16)
       let sequence = {
         id: "#"+r+g+b,
-        sequences: []
+        vertices: [],
+        nodes: [],
       }
-      this.currentsequence = sequence
+      if(!this.play) {
+        this.currentsequence = sequence
+      }
       this.sequences.push(sequence)
     },
     getNodeBColor(node) {
-      if (this.currentsequence && this.currentsequence.sequences.includes(node.id)) {
+      if (this.currentsequence && this.currentsequence.nodes.includes(node.id)) {
         return this.currentsequence.id
       }
       else {
@@ -384,10 +306,10 @@ export default {
       }
     },
     getLineColor(vertex) {
-      if (!vertex[0].visible||!vertex[1].visible) {
+      if (!vertex.obj.visible||!vertex.sub.visible) {
         return 'white'
       }
-      else if (this.currentsequence && this.currentsequence.sequences.includes(vertex[0].id)&&this.currentsequence.sequences.includes(vertex[1].id)) {
+      else if (this.currentsequence && this.currentsequence.vertices.includes(vertex.pk)) {
         return this.currentsequence.id
       }
       else if (this.focusedNode==vertex) {
@@ -435,9 +357,7 @@ export default {
       }
     },
     spaceNodes(node) {
-      let box = node.boundingH * this.yDist
       let last = 0
-      console.log(box)
       for(let i=0;i<node.vertices.length;i++) {
         let target = this.nodes[node.vertices[i]]
         target.y = node.y+this.yDist*last
@@ -447,7 +367,6 @@ export default {
     },
     generateGraph() {
       let remaining = this.graph.nodes.filter((n)=>!Object.keys(this.nodes).includes(n))
-      let x = 0
       let origins = []
       while (remaining.length) {
         let nodeID = remaining[0]
@@ -456,35 +375,14 @@ export default {
           let vertices = this.graph.vertices.filter((e)=>Array.from(e).includes(nodeID)&&!this.vertices.includes(e))
           this.displayVertices = this.displayVertices.concat(vertices)
           this.vertices += vertices
-          let newNode = new Node(0, x*(this.yDist), nodeID)
+          let newNode = new Node(0, 0, nodeID)
           newNode.vertices = vertices.map((e)=>e[0]==nodeID?e[1]:e[0])
           this.nodes[nodeID] = newNode
           this.generateChilds(newNode, vertices.map((e)=>e[0]==nodeID?e[1]:e[0]))
         }
-        x++
         remaining = this.graph.nodes.filter((n)=>!Object.keys(this.nodes).includes(n))
       }
 
-      // function calcDescenders(node, app, descenders) {
-      //   if (descenders) {
-      //     node.descenders = Array.from(new Set(node.descenders.concat(descenders)))
-      //     if (node.parent) {
-      //       calcDescenders(app.nodes[node.parent], app, node.descenders.concat(node.id))
-      //     }
-      //     else {
-      //       return
-      //     }
-      //   }
-      //   else if (node.vertices.length) {
-      //     for (let i=0; i<node.vertices.length; i++) {
-      //       calcDescenders(app.nodes[node.vertices[i]], app, 0)
-      //     }
-      //   }
-      //   else {
-      //     calcDescenders(app.nodes[node.parent], app, [node.id])
-      //   }
-      // }
-      // calcDescenders(this.nodes[origin], this, 0)
       let lastBox = 0
       for(let i=0;i<origins.length; i++) {
         let origin = origins[i]
@@ -495,11 +393,13 @@ export default {
       }
 
       for(let i in this.displayVertices) {
-        this.displayVertices[i] = [
-          this.nodes[this.displayVertices[i][0]],
+        let vertex = new Vertex(
+          this.nodes[this.displayVertices[i][0]], 
           this.nodes[this.displayVertices[i][1]],
           this.displayVertices[i][2]
-        ]
+        )
+
+        this.displayVertices[i] = vertex
       }
     },
     setVisible(node, num) {
@@ -539,11 +439,20 @@ export default {
     },
     centerCanvas() {
       if (this.focusedNode) {
-        let graphContents = document.getElementById("node-container")
+        if (this.focusedNode.obj) {
+          let graphContents = document.getElementById("node-container")
 
-        let bounds = graphContents.getBoundingClientRect()
-        this.origin[0] = bounds.width/2 - this.focusedNode.x
-        this.origin[1] = (bounds.height)/2 -this.focusedNode.y
+          let bounds = graphContents.getBoundingClientRect()
+          this.origin[0] = bounds.width/2 - (this.focusedNode.obj.x+this.focusedNode.sub.x)/2
+          this.origin[1] = (bounds.height)/2 - (this.focusedNode.obj.y+this.focusedNode.sub.y)/2
+        }
+        else {
+          let graphContents = document.getElementById("node-container")
+
+          let bounds = graphContents.getBoundingClientRect()
+          this.origin[0] = bounds.width/2 - this.focusedNode.x
+          this.origin[1] = (bounds.height)/2 -this.focusedNode.y
+        }
       }
     },
     setupNodeContainer() {
@@ -553,7 +462,7 @@ export default {
       let y = 0
 
       graphContents.addEventListener('mousedown', (e)=>{
-        if (e.button == 2) {
+        if (e.button == 0) {
           if (e.target==this.$refs.svg) {
             e.preventDefault()
             x = e.x
@@ -570,6 +479,7 @@ export default {
         }
         else {
           this.focusedNode = null
+          this.showData = false
         }
       })
       
@@ -614,16 +524,28 @@ export default {
         if (e.key == ' ') {
           this.centerCanvas()
         }
-        if ((e.key == 'ArrowRight' || e.key == 'd') && this.focusedNode.vertices.length) {
-          let nextChild = this.focusedNode.vertices[Math.floor(this.focusedNode.vertices.length/2)]
-          this.focusedNode = this.nodes[nextChild]
-          this.centerCanvas()
+        if ((e.key == 'ArrowRight' || e.key.toLowerCase() == 'd')) {
+          if (this.focusedNode.vertices && this.focusedNode.vertices.length) {
+            let nextChild = this.focusedNode.vertices[Math.floor(this.focusedNode.vertices.length/2)]
+            this.focusedNode = this.nodes[nextChild]
+            this.centerCanvas()
+          }
+          else if (this.focusedNode.sub) {
+            this.focusedNode = this.focusedNode.sub
+            this.centerCanvas()
+          }
         }
-        if ((e.key == 'ArrowLeft' || e.key == 'a') && this.focusedNode.parent) {
-          this.focusedNode = this.nodes[this.focusedNode.parent]
-          this.centerCanvas()
+        if ((e.key == 'ArrowLeft' || e.key.toLowerCase() == 'a')) {
+          if(this.focusedNode.parent) {
+            this.focusedNode = this.nodes[this.focusedNode.parent]
+            this.centerCanvas()
+          }
+          else if (this.focusedNode.obj) {
+            this.focusedNode = this.focusedNode.obj
+            this.centerCanvas()
+          }
         }
-        if ((e.key == 'ArrowUp' || e.key == 'w') && this.focusedNode.parent) {
+        if ((e.key == 'ArrowUp' || e.key.toLowerCase() == 'w') && this.focusedNode.parent) {
           let siblings = this.nodes[this.focusedNode.parent].vertices
           if (siblings.length) {
             let index = siblings.indexOf(this.focusedNode.id)
@@ -633,7 +555,7 @@ export default {
             }
           }
         }
-        if ((e.key == 'ArrowDown' || e.key == 's') && this.focusedNode.parent) {
+        if ((e.key == 'ArrowDown' || e.key.toLowerCase() == 's') && this.focusedNode.parent) {
           let siblings = this.nodes[this.focusedNode.parent].vertices
           if (siblings.length) {
             let index = siblings.indexOf(this.focusedNode.id)
@@ -645,7 +567,9 @@ export default {
         }
       }
     })
-
+    window.addEventListener('contextmenu', (e)=>{
+      e.preventDefault()
+    })
     window.addEventListener('wheel', (e) => {
       this.scale = Math.max(Math.min((this.scale-e.deltaY/33), 1000), 30)
     })
@@ -668,6 +592,13 @@ export default {
         this.updateGraph()
       },
       deep: true
+    },
+    focusedNode: {
+      handler() {
+        this.$nextTick(()=>{
+          this.centerCanvas()
+        })
+      }
     }
   }
 }
@@ -905,6 +836,7 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   width: 100%;
   box-sizing: border-box;
   position: relative;
+  user-select: none;
   background: var(--background);
 }
 .graph-data-container {
