@@ -354,15 +354,7 @@ export default {
             return proposition
         },
         parseProposition(proposition) {
-            let i = Math.floor(Math.random()*2)
-            let parsed = ""
-            if(i){
-                proposition.value?'es cierto que':'es falso que'
-                parsed += proposition.obj+' '+proposition.rel+' '+proposition.sub
-            }
-            else {
-                parsed = proposition.obj+' '+(proposition.negated?'no ':'')+proposition.rel+' '+proposition.sub
-            }
+            let parsed = proposition.obj+' '+(proposition.negated?'no ':'')+proposition.rel+' '+proposition.sub
 
             return parsed
         },
@@ -371,6 +363,7 @@ export default {
             let firstProposition = this.generateProposition(firstVertex)
             let value = firstProposition.value
             let parsed = this.parseProposition(firstProposition)
+            let check = [firstProposition.value]
 
             for(let i=1; i<sequence.vertices.length; i++) {
                 let i = Math.floor(Math.random()*2)
@@ -384,6 +377,7 @@ export default {
                     parsed += ' o '+this.parseProposition(proposition)
                     value = proposition.value || value
                 }
+                check.push(proposition.value)
             }
             return {
                 value: value,

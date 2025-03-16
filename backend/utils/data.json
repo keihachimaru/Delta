@@ -1,0 +1,657 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": 6242,
+        "name": "setas",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [
+          45110
+        ],
+        "descendants": [
+          61454,
+          69558,
+          81271
+        ],
+        "alias": [
+          6242
+        ],
+        "isSet": true
+      },
+      {
+        "id": 61454,
+        "name": "setitas",
+        "vertices": {
+          "out": [],
+          "in": [
+            18269,
+            21151
+          ]
+        },
+        "ancestors": [
+          6242
+        ],
+        "descendants": [],
+        "alias": [
+          61454
+        ],
+        "isSet": false
+      },
+      {
+        "id": 69558,
+        "name": "setones",
+        "vertices": {
+          "out": [],
+          "in": [
+            20861
+          ]
+        },
+        "ancestors": [
+          6242
+        ],
+        "descendants": [],
+        "alias": [
+          69558
+        ],
+        "isSet": false
+      },
+      {
+        "id": 81271,
+        "name": "esporas",
+        "vertices": {
+          "out": [],
+          "in": [
+            35002
+          ]
+        },
+        "ancestors": [
+          6242
+        ],
+        "descendants": [],
+        "alias": [
+          81271
+        ],
+        "isSet": false
+      },
+      {
+        "id": 60173,
+        "name": "arboles",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [
+          45110
+        ],
+        "descendants": [
+          10310,
+          31053,
+          27495
+        ],
+        "alias": [
+          60173
+        ],
+        "isSet": true
+      },
+      {
+        "id": 10310,
+        "name": "cipres",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [
+          60173
+        ],
+        "descendants": [
+          89150,
+          96706,
+          57214
+        ],
+        "alias": [
+          10310
+        ],
+        "isSet": true
+      },
+      {
+        "id": 31053,
+        "name": "nogal",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [
+          60173
+        ],
+        "descendants": [],
+        "alias": [
+          31053
+        ],
+        "isSet": false
+      },
+      {
+        "id": 27495,
+        "name": "pino",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [
+          60173
+        ],
+        "descendants": [],
+        "alias": [
+          27495
+        ],
+        "isSet": false
+      },
+      {
+        "id": 45110,
+        "name": "bosque",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [],
+        "descendants": [
+          6242,
+          60173,
+          83138
+        ],
+        "alias": [
+          45110
+        ],
+        "isSet": true
+      },
+      {
+        "id": 83138,
+        "name": "animales",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [
+          45110
+        ],
+        "descendants": [
+          61414
+        ],
+        "alias": [
+          83138
+        ],
+        "isSet": false
+      },
+      {
+        "id": 61414,
+        "name": "pajaro",
+        "vertices": {
+          "out": [
+            18269,
+            20861,
+            35002
+          ],
+          "in": []
+        },
+        "ancestors": [
+          45110,
+          83138
+        ],
+        "descendants": [],
+        "alias": [
+          61414
+        ],
+        "isSet": false
+      },
+      {
+        "id": 93839,
+        "name": "capericuta",
+        "vertices": {
+          "out": [
+            21151
+          ],
+          "in": []
+        },
+        "ancestors": [],
+        "descendants": [],
+        "alias": [
+          93839
+        ],
+        "isSet": false
+      },
+      {
+        "id": 89150,
+        "name": "hormiga",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [
+          60173,
+          10310
+        ],
+        "descendants": [],
+        "alias": [
+          89150
+        ],
+        "isSet": false
+      },
+      {
+        "id": 96706,
+        "name": "abejorro",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [
+          60173,
+          10310
+        ],
+        "descendants": [],
+        "alias": [
+          96706
+        ],
+        "isSet": false
+      },
+      {
+        "id": 57214,
+        "name": "amapola",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [
+          60173,
+          10310
+        ],
+        "descendants": [],
+        "alias": [
+          57214
+        ],
+        "isSet": false
+      },
+      {
+        "id": 93744,
+        "name": "setas ",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [],
+        "descendants": [],
+        "alias": [
+          93744
+        ],
+        "isSet": false
+      },
+      {
+        "id": 52634,
+        "name": " setitas",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [],
+        "descendants": [],
+        "alias": [
+          52634
+        ],
+        "isSet": false
+      },
+      {
+        "id": 88762,
+        "name": " setones",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [],
+        "descendants": [],
+        "alias": [
+          88762
+        ],
+        "isSet": false
+      },
+      {
+        "id": 59201,
+        "name": " esporas",
+        "vertices": {
+          "out": [],
+          "in": []
+        },
+        "ancestors": [],
+        "descendants": [],
+        "alias": [
+          59201
+        ],
+        "isSet": false
+      }
+    ],
+    "vertices": [
+      {
+        "obj": 61414,
+        "sub": 61454,
+        "attrs": [],
+        "id": 18269,
+        "name": "come",
+        "directed": true,
+        "order": 0
+      },
+      {
+        "obj": 61414,
+        "sub": 69558,
+        "attrs": [],
+        "id": 20861,
+        "name": "come",
+        "directed": true,
+        "order": 0
+      },
+      {
+        "obj": 61414,
+        "sub": 81271,
+        "attrs": [],
+        "id": 35002,
+        "name": "come",
+        "directed": true,
+        "order": 0
+      },
+      {
+        "obj": 93839,
+        "sub": 61454,
+        "attrs": [],
+        "id": 21151,
+        "name": "",
+        "directed": true,
+        "order": 0
+      }
+    ],
+    "sequences": []
+  },
+  "text": "Setas :s: setitas, setones, esporas\nArboles :s: cipres, nogal, pino\nBosque :s: setas, arboles, animales\nanimales.pajaro :come: Setas\nCapericuta :: se fue un dia a buscar a [setitas]\ncipres :s: hormiga, abejorro, amapola",
+  "exam": {
+    "content": "Setas :s: setitas, setones, esporas\nArboles :s: cipres, nogal, pino\nBosque :s: setas, arboles, animales\nanimales.pajaro :come: Setas\nCapericuta :: se fue un dia a buscar a [setitas]\ncipres :s: hormiga, abejorro, amapola",
+    "questions": [
+      {
+        "question": "Elija la correcta",
+        "options": [
+          "esporas :s: setitas, setones, esporas",
+          "setas :s: setitas, setones, cipres",
+          "setas :s: setitas, arboles, esporas",
+          "setas :s: setitas, setones, esporas",
+          "setas :s: setitas, setitas, esporas"
+        ],
+        "correct": [
+          3
+        ],
+        "answer": [
+          2
+        ],
+        "nodes": [
+          6242,
+          61454,
+          69558,
+          81271,
+          10310,
+          60173
+        ]
+      },
+      {
+        "question": "Elija la correcta",
+        "options": [
+          "setas :s: setitas, setones, esporas",
+          "setas :s: setitas, setitas, esporas",
+          "setas :s: setitas, setones, amapola",
+          "setas :s: setones, setones, esporas",
+          "setas :s: setas, setones, esporas"
+        ],
+        "correct": [
+          0
+        ],
+        "answer": [
+          2
+        ],
+        "nodes": [
+          6242,
+          61454,
+          69558,
+          81271,
+          57214
+        ]
+      },
+      {
+        "question": "Elija la correcta",
+        "options": [
+          "setas :s: setitas, setones, amapola",
+          "setas :s: setitas, setones, amapola",
+          "setas :s: setitas, setitas, esporas",
+          "setas :s: setitas, setitas, esporas",
+          "setas :s: setitas, setones, esporas"
+        ],
+        "correct": [
+          4
+        ],
+        "answer": [
+          1
+        ],
+        "nodes": [
+          6242,
+          61454,
+          69558,
+          81271,
+          57214
+        ]
+      },
+      {
+        "question": "Elija la correcta",
+        "options": [
+          "setas :s: setones, setones, esporas",
+          "setas :s: setitas, setones, esporas",
+          "setas :s: setitas, setitas, esporas",
+          "setitas :s: setitas, setones, esporas",
+          "setones :s: setitas, setones, esporas"
+        ],
+        "correct": [
+          1
+        ],
+        "answer": [
+          1
+        ],
+        "nodes": [
+          6242,
+          61454,
+          69558,
+          81271
+        ]
+      },
+      {
+        "question": "Elija la correcta",
+        "options": [
+          "setas :s: setitas, setitas, esporas",
+          "setas :s: setitas, setones, esporas",
+          "setas :s: setones, setones, esporas",
+          "setas :s: setitas, setitas, esporas",
+          "setas :s: setitas, setones, amapola"
+        ],
+        "correct": [
+          1
+        ],
+        "answer": [
+          1
+        ],
+        "nodes": [
+          6242,
+          61454,
+          69558,
+          81271,
+          57214
+        ]
+      },
+      {
+        "question": "Elija la correcta",
+        "options": [
+          "setas :s: setitas, setones, esporas",
+          "setas :s: setitas, setones, amapola",
+          "setas :s: setitas, setitas, esporas",
+          "setas :s: setas, setones, esporas",
+          "setas :s: setitas, setones, amapola"
+        ],
+        "correct": [
+          0
+        ],
+        "answer": [
+          2
+        ],
+        "nodes": [
+          6242,
+          61454,
+          69558,
+          81271,
+          57214
+        ]
+      },
+      {
+        "question": "Elija la correcta",
+        "options": [
+          "setas :s: setones, setones, esporas",
+          "setas :s: setitas, setones, amapola",
+          "setas :s: setones, setones, esporas",
+          "setas :s: setitas, setitas, esporas",
+          "setas :s: setitas, setones, esporas"
+        ],
+        "correct": [
+          4
+        ],
+        "answer": [
+          4
+        ],
+        "nodes": [
+          6242,
+          61454,
+          69558,
+          81271,
+          57214
+        ]
+      },
+      {
+        "question": "Elija la correcta",
+        "options": [
+          "setas :s: setitas, setones, esporas",
+          "setas :s: setitas, setitas, esporas",
+          "setitas :s: setitas, setones, esporas",
+          "setas :s: setitas, setitas, esporas",
+          "setas :s: setitas, setones, amapola"
+        ],
+        "correct": [
+          0
+        ],
+        "answer": [
+          1
+        ],
+        "nodes": [
+          6242,
+          61454,
+          69558,
+          81271,
+          57214
+        ]
+      },
+      {
+        "question": "Elija la correcta",
+        "options": [
+          "setones :s: setitas, setones, esporas",
+          "setas :s: setitas, setones, cipres",
+          "setas :s: setitas, setones, esporas",
+          "setas :s: setitas, setitas, esporas",
+          "setas :s: setas, setones, esporas"
+        ],
+        "correct": [
+          2
+        ],
+        "answer": null,
+        "nodes": [
+          6242,
+          61454,
+          69558,
+          81271,
+          10310
+        ]
+      }
+    ],
+    "curr": 0,
+    "errors": [
+      6242,
+      61454,
+      69558,
+      81271,
+      57214,
+      6242,
+      61454,
+      69558,
+      81271,
+      6242,
+      61454,
+      69558,
+      81271,
+      57214,
+      6242,
+      61454,
+      69558,
+      81271,
+      57214,
+      6242,
+      61454,
+      69558,
+      81271,
+      57214,
+      6242,
+      61454,
+      69558,
+      81271,
+      57214
+    ],
+    "aparitions": [
+      6242,
+      61454,
+      69558,
+      81271,
+      10310,
+      60173,
+      6242,
+      61454,
+      69558,
+      81271,
+      57214,
+      6242,
+      61454,
+      69558,
+      81271,
+      57214,
+      6242,
+      61454,
+      69558,
+      81271,
+      6242,
+      61454,
+      69558,
+      81271,
+      57214,
+      6242,
+      61454,
+      69558,
+      81271,
+      57214,
+      6242,
+      61454,
+      69558,
+      81271,
+      57214,
+      6242,
+      61454,
+      69558,
+      81271,
+      57214
+    ]
+  }
+}

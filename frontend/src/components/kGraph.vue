@@ -1,48 +1,9 @@
 <template>
   <div id="graph">
     <div id="graph-contents" class="graph-contents" :style="{cursor: !drag?'default':'grab'}">
-      <div class="sequences-bar">
-        <div @click="createSequence()" class="create-sequence-btn custom-btn">
-          <svg-icon type="mdi" :path="mdi.mdiPlus" :size="20"></svg-icon>
-        </div>
-        <span
-          class="sequence-btn"
-          v-for="(sequence,i) in sequences" :key="i"
-          :style="{
-            background: sequence.id,
-            borderColor: currentsequence==sequence?'var(--secondary)':'var(--background-alt)'
-          }"
-          @click="setCurrentSequence(sequence)"
-        >
-        </span>
-      </div>
-      <input v-model="xDist" id="xdist-editor" type="number">
-      <input v-model="yDist" id="ydist-editor" type="number">
-      <div 
-        id="play-sequence" 
-        class="custom-btn" 
-        @click="playSequence()"
-        v-if="currentsequence||play"
-        :style="{
-          borderColor: currentsequence?currentsequence.id:'var(--primary)',
-          color: currentsequence?currentsequence.id:'var(--primary)',
-        }"
-        >
-        <svg-icon type="mdi" :path="mdi.mdiPlay" :size="20"></svg-icon>
-      </div>
-      <div 
-        class="sequence-container" 
-        id="sequence-container"
-        :style="{
-          borderColor: currentsequence?currentsequence.id:'var(--primary)'
-        }"
-        v-if="play">
-        <kTest :nodes="nodes" :vertices="displayVertices" :sequence="currentsequence"/>
-      </div>
       <div 
         class="node-container" 
-        id="node-container" 
-        v-else>
+        id="node-container">
         <span 
           class="node" 
           v-for="(node, i) in nodes" 
@@ -56,7 +17,7 @@
             color: getNodeLColor(node),
             transform: `translate(${(-0.4*0.5*100)}px, ${(-0.4*0.5*100)}px) scale(${scale}%)`,
           }"
-          @click.right="focusedNode=node;showData=true"
+          @click="clickNode(node)"
           >
           <span
             :style="{
@@ -86,8 +47,7 @@
             :y2=vertex.sub.y*scale/100+origin[1]
             :stroke="getLineColor(vertex)"
             :stroke-width="Math.floor(scale/80)+1"
-            @click.right="focusedNode=vertex;showData=true"
-            @dblclick="addVertexSequence(vertex)"
+            @click="clickVertex(vertex)"
             />
           <rect
             v-for="(vertex, i) in displayVertices" 
@@ -96,8 +56,7 @@
             :y=(vertex.obj.y+vertex.sub.y)/2*scale/100+origin[1]-6
             height="12"
             :width="vertex.id.length*6+3"
-            @click.right="focusedNode=vertex;showData=true"
-            @dblclick="addVertexSequence(vertex)"
+            @click="clickVertex(vertex)"
             fill="white"
             >
           </rect>
@@ -109,8 +68,7 @@
             stroke-width="1"
             :fill="getLineColor(vertex)"
             :text-length="vertex.id.length*6"
-            @click.right="focusedNode=vertex;showData=true"
-            @dblclick="addVertexSequence(vertex)"
+            @click="clickVertex(vertex)"
             style="cursor: pointer; user-select: none;"
             :font-size="Math.max(scale/8, 5)"
             >
@@ -119,60 +77,10 @@
         </svg>
       </div>
     </div>
-    <div class="graph-data">
-      <div 
-        @click="showData=!showData" 
-        id="showData"
-        :class="showData?'show-data':'hide-data'"
-        >
-        <svg-icon type="mdi" :path="mdi.mdiTriangle" :size="14"></svg-icon>
-      </div>
-      <div class="graph-data-container" v-if="showData && focusedNode">
-        <div 
-          @click="mode='image'" 
-          :class="['custom-btn', mode=='image'?'active':'']" 
-          style="top: 5px; left: 5px; position: absolute;">
-          <svg-icon type="mdi" :path="mdi.mdiImageArea" :size="18"></svg-icon>
-        </div>
-        <div 
-          @click="mode='text'" 
-          :class="['custom-btn', mode=='text'?'active':'']" 
-          style="top: 35px; left: 5px; position: absolute;">
-          <svg-icon type="mdi" :path="mdi.mdiTextAccount" :size="18"></svg-icon>
-        </div>
-        <div class="graph-data-contents">
-          <textarea v-if="mode=='text'" autofocus="true" v-model="focusedNode.text">
-          </textarea>
-          <div v-if="mode=='image'" class="graph-data-image-container">
-            <label for="upload">
-              <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
-              <input type="file" id="upload" accept="image/*" v-on:change="updateNodeImage($event.target)" style="display:none">
-            </label>
-            <img id="node-image" :src="focusedNode.text">
-          </div>
-        </div>
-        <div class="graph-data-stats" v-if="focusedNode.text">
-          <span><strong>ID</strong> : {{ focusedNode.id }}</span>
-          <span><strong>Parent</strong> : {{ focusedNode.parent }}</span>
-          <span><strong>Ancestors</strong> : {{ focusedNode.ancestors.length }}</span>
-          <span><strong>Descenders</strong> : {{ focusedNode.descenders.length }}</span>
-        </div>
-        <div class="graph-data-stats" v-else>
-          <span><strong>ID</strong> : {{ focusedNode.id }}</span>
-          <span><strong>PK</strong> : {{ focusedNode.pk }}</span>
-          <span><strong>Object</strong> : {{ focusedNode.obj.id }}</span>
-          <span><strong>Subject</strong> : {{ focusedNode.sub.id }}</span>
-        </div>
-      </div>
-      <div style="height:20px; width: 10px;" v-else>
-      </div>
-    </div>
   </div>
 </template>
 
 <script>
-import kTest from './kTest.vue'
-import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiTable, mdiPlus, mdiHelp, mdiPlay, mdiTriangle, mdiImageArea, mdiTextAccount, mdiSkipNext  } from '@mdi/js';
 
 class Node {
@@ -191,9 +99,9 @@ class Node {
   }
 }
 class Vertex {
-  constructor(node1, node2, id) {
+  constructor(node1, node2, id, pk) {
     this.id = id
-    this.pk = Math.floor(Math.random()*10000)
+    this.pk = pk
     this.obj = node1
     this.sub = node2
   }
@@ -206,10 +114,12 @@ export default {
       type: Object,
       required: true,
     },
+    config: {
+      type: Object,
+      required: true
+    }
   },
   components: {
-    SvgIcon,
-    kTest
   },
   data() {
     return {
@@ -223,7 +133,6 @@ export default {
         mdiHelp: mdiHelp,
         mdiTable: mdiTable,
       },
-      focusedNode: null,
       nodes : {},
       vertices: [],
       displayVertices: [],
@@ -237,9 +146,16 @@ export default {
       mode: 'text',
       play: false,
       showData: false,
+      focusedNode: null,
     }
   },
   methods: {
+    clickNode(node) {
+      this.$emit('clickNode', node)
+    },
+    clickVertex(vertex) {
+      this.$emit('clickVertex', vertex)
+    },
     playSequence() {
       this.play = !this.play
       if (!this.play) {
@@ -378,7 +294,9 @@ export default {
           let newNode = new Node(0, 0, nodeID)
           newNode.vertices = vertices.map((e)=>e[0]==nodeID?e[1]:e[0])
           this.nodes[nodeID] = newNode
-          this.generateChilds(newNode, vertices.map((e)=>e[0]==nodeID?e[1]:e[0]))
+          if(vertices.length) {
+            this.generateChilds(newNode, vertices.map((e)=>e[0]==nodeID?e[1]:e[0]))
+          }
         }
         remaining = this.graph.nodes.filter((n)=>!Object.keys(this.nodes).includes(n))
       }
@@ -387,16 +305,22 @@ export default {
       for(let i=0;i<origins.length; i++) {
         let origin = origins[i]
         this.nodes[origin].y += lastBox
-        this.calcBoundingH(this.nodes[origin], 0)
-        this.spaceNodes(this.nodes[origin])
-        lastBox = this.nodes[origin].boundingH*this.yDist
+        if(this.nodes[origin].vertices.length) {
+          this.calcBoundingH(this.nodes[origin], 0)
+          this.spaceNodes(this.nodes[origin])
+        }
+        else {
+          this.nodes[origin].boundingH = 1;
+        }
+        lastBox += this.nodes[origin].boundingH*this.yDist
       }
 
       for(let i in this.displayVertices) {
         let vertex = new Vertex(
           this.nodes[this.displayVertices[i][0]], 
           this.nodes[this.displayVertices[i][1]],
-          this.displayVertices[i][2]
+          this.displayVertices[i][2],
+          this.displayVertices[i][3]
         )
 
         this.displayVertices[i] = vertex
@@ -501,7 +425,6 @@ export default {
     }
   },
   mounted() {
-    this.updateGraph()
     this.setupNodeContainer()
 
     window.addEventListener('keydown', (e)=>{
@@ -599,12 +522,30 @@ export default {
           this.centerCanvas()
         })
       }
-    }
+    },
+    config: {
+      handler() {
+        let focused = this.config.focused
+        let node =  this.nodes[focused]
+        let vertex = this.displayVertices.find((v)=>v.pk==focused)
+
+        if(node) this.focusedNode = node
+        else if(vertex) this.focusedNode = vertex
+        else this.focusedNode = null
+
+        this.sequences = this.config.sequences
+        this.currentsequence = this.config.currentSequence
+      },
+      deep: true
+    },
   }
 }
 </script>
 
 <style scoped>
+
+/* BREAKPOINT */
+
 #xdist-editor {
   position: absolute;
   top: 50px;
@@ -660,7 +601,6 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   bottom: 0;
   cursor: pointer;
 }
-
 .create-sequence-btn {
   height: 24px;
   width: 24px;
@@ -695,15 +635,16 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   background: var(--primary-light);
   height: 1px;
 }
+
+/* BREAKPOINT */
+
 #svg {
   height: 100%;
   width: 100%;
 }
 #graph {
-  height: calc(100%-16px);
-  width: calc(50% - 8px);
-  margin: 8px;
-  margin-right: 4px;
+  height: calc(100%);
+  width: calc(100%);
   box-sizing: border-box;
   display: flex;
   justify-content: center;
@@ -723,12 +664,11 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   overflow: hidden;
 }
 .node-container {
-  height: calc(100% - 80px);
-  margin-top: 80px;
+  height: calc(100%);
   position: relative;
-  width: calc(100% - 20px);
+  width: calc(100%);
   overflow: hidden;
-  border: 2px solid var(--primary-light);
+  border: 1px solid var(--primary);
   border-radius: 0px;
 }
 .sequence-container {
